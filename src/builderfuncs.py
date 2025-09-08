@@ -2,10 +2,7 @@ import os
 import shutil
 from markdown_to_html import markdown_to_html_node
 
-def build_public():
-    path = os.path.abspath(".")
-    pathpub = path+"/public"
-    pathstat = path+"/static"
+def build_public(pathstat,pathpub):
     if os.path.exists(pathpub):
         shutil.rmtree(pathpub)
     os.mkdir(pathpub)
@@ -53,7 +50,7 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path,"w")as file:
         file.write(fullpage)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path,base_path):
     if os.path.isdir(dir_path_content):
         for item in os.listdir(dir_path_content):
             filename = item
@@ -61,7 +58,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 filename = "index.html"
             fpath = dir_path_content+"/"+item
             dpath = dest_dir_path+"/"+filename
-            generate_pages_recursive(fpath,template_path,dpath)
+            generate_pages_recursive(fpath,template_path,dpath,base_path)
     else:
         source = ""
         template = ""
@@ -73,8 +70,11 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
         title = extract_title(source)
         rawhtml = htmlnodes.to_html()
         template = template.replace("{{ Title }}",title)
-        fullpage = template.replace("{{ Content }}",rawhtml)
+        template = template.replace("{{ Content }}",rawhtml)
+        template = template.replace('href="/', 'href="' + base_path)
+        template = template.replace('src="/', 'src="' + base_path)
+
         if not os.path.exists(os.path.dirname(dest_dir_path)):
             os.makedirs(os.path.dirname(dest_dir_path))
         with open(dest_dir_path,"w")as file:
-            file.write(fullpage)
+            file.write(template)
